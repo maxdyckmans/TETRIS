@@ -1,84 +1,170 @@
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collections;
+
 
 public class Block {
     public static int blockCount = 0;
     public int blockID;
     public int type;
-    public ArrayList<Square> blockStructureVerticallySorted = new ArrayList<Square>();
-    public ArrayList<Square> blockStructureHorizontallySorted;
+    public ArrayList<Square> blockStructureSortedByRow = new ArrayList<Square>();
+    public ArrayList<Square> blockStructureSortedByCol;
+    public Square center;
     //Constructor
     public Block(int type){
         this.type = type;
         blockID = blockCount;
         blockCount++;
 
-
-        blockStructureVerticallySorted.add(new Square(blockID, type, 0, 0));
+        center = new Square(blockID, type, 0, 0);
+        blockStructureSortedByRow.add(center);
         switch(type){
             case 1:
 
-                blockStructureVerticallySorted.add(new Square(blockID,type, 1, 0));
-                blockStructureVerticallySorted.add(new Square(blockID,type, -1, 0));
-                blockStructureVerticallySorted.add(new Square(blockID,type, -1, 1));
+                blockStructureSortedByRow.add(new Square(blockID,type, 1, 0));
+                blockStructureSortedByRow.add(new Square(blockID,type, -1, 0));
+                blockStructureSortedByRow.add(new Square(blockID,type, -1, 1));
 
                 break;
 
             case 2:
-                blockStructureVerticallySorted.add(new Square(blockID,type, 1, 0));
-                blockStructureVerticallySorted.add(new Square(blockID,type, -1,0 ));
-                blockStructureVerticallySorted.add(new Square(blockID,type, -1, -1));
+                blockStructureSortedByRow.add(new Square(blockID,type, 1, 0));
+                blockStructureSortedByRow.add(new Square(blockID,type, -1,0 ));
+                blockStructureSortedByRow.add(new Square(blockID,type, -1, -1));
 
                 break;
 
             case 3:
 
-                blockStructureVerticallySorted.add(new Square(blockID,type, 1, 0));
-                blockStructureVerticallySorted.add(new Square(blockID,type, 0, 1));
-                blockStructureVerticallySorted.add(new Square(blockID,type, -1, 1));
+                blockStructureSortedByRow.add(new Square(blockID,type, 1, 0));
+                blockStructureSortedByRow.add(new Square(blockID,type, 0, 1));
+                blockStructureSortedByRow.add(new Square(blockID,type, -1, 1));
                 break;
 
             case 4:
-                blockStructureVerticallySorted.add(new Square(blockID,type, 1, 0));
-                blockStructureVerticallySorted.add(new Square(blockID,type, -1, 1));
-                blockStructureVerticallySorted.add(new Square(blockID,type, -1, 0));
+                blockStructureSortedByRow.add(new Square(blockID,type, -1, -1));
+                blockStructureSortedByRow.add(new Square(blockID,type, 0, -1));
+                blockStructureSortedByRow.add(new Square(blockID,type, 1, 0));
 
                 break;
 
             case 5:
-                blockStructureVerticallySorted.add(new Square(blockID,type, 0, -1));
-                blockStructureVerticallySorted.add(new Square(blockID,type, 0, 1));
-                blockStructureVerticallySorted.add(new Square(blockID,type, -1, 0));
+                blockStructureSortedByRow.add(new Square(blockID,type, 0, -1));
+                blockStructureSortedByRow.add(new Square(blockID,type, 0, 1));
+                blockStructureSortedByRow.add(new Square(blockID,type, -1, 0));
 
                 break;
 
             case 6:
 
-                blockStructureVerticallySorted.add(new Square(blockID,type, 0, 1));
-                blockStructureVerticallySorted.add(new Square(blockID,type, -1, 0));
-                blockStructureVerticallySorted.add(new Square(blockID,type, -1, 1));
+                blockStructureSortedByRow.add(new Square(blockID,type, 0, 1));
+                blockStructureSortedByRow.add(new Square(blockID,type, -1, 0));
+                blockStructureSortedByRow.add(new Square(blockID,type, -1, 1));
                 break;
 
             case 7:
-                blockStructureVerticallySorted.add(new Square(blockID,type, 2, 0));
-                blockStructureVerticallySorted.add(new Square(blockID,type, 1, 0));
-                blockStructureVerticallySorted.add(new Square(blockID,type, -1, 0));
+                blockStructureSortedByRow.add(new Square(blockID,type, 2, 0));
+                blockStructureSortedByRow.add(new Square(blockID,type, 1, 0));
+                blockStructureSortedByRow.add(new Square(blockID,type, -1, 0));
 
                 break;
         }
         //Creates Arraylist with Squares sorted in reverse by their ROW, for moving down
-        Collections.sort(blockStructureVerticallySorted, Square.Comparators.ROW.reversed());
+        blockStructureSortedByRow.sort(Square.Comparators.ROW.reversed());
 
         //Creates Arraylist with Squares sorted by their COLUMN, for moving left (reversed) and right
-        blockStructureHorizontallySorted = (ArrayList<Square>) blockStructureVerticallySorted.clone();
-        Collections.sort(blockStructureHorizontallySorted, Square.Comparators.COLUMN);
+        blockStructureSortedByCol = (ArrayList<Square>) blockStructureSortedByRow.clone();
+        blockStructureSortedByCol.sort(Square.Comparators.COLUMN);
 
+    }
 
-        for(Square s: blockStructureVerticallySorted){
-            System.out.println("ROW: " + s.getRelativeRow()+ " COLUMN: "+ s.getRelativeCol());
+    public void rotate1(Square [][] gameBoard){
+        int [][] newRelativePositions = new int[blockStructureSortedByRow.size()][2];
+        int [][] newAbsolutePositions = new int[blockStructureSortedByRow.size()][2];
+
+        for(int i = 0; i < blockStructureSortedByRow.size(); i++){
+
+            Square s = blockStructureSortedByRow.get(i);
+
+            //Rotation for all Blocks except LongBlock and SquareBlock
+
+            if(s.getRelativeRow() == 0){
+                if(s.getRelativeCol() != 0){
+                    //Left and right square
+                    newRelativePositions[i][0] = s.getRelativeCol(); //Swap previous Row with Column
+                    newRelativePositions[i][1] = 0; //New RelativeCol is equal to the old relative Row = 0
+                }else{
+                    //Center square stays as is
+                    newRelativePositions[i][0] = 0;
+                    newRelativePositions[i][1] = 0;
+                }
+            }
+            else{
+                if (s.getRelativeCol() == 0){
+                    //Top and Bottom Square
+                    newRelativePositions[i][0] = 0; //new Row is old Column (0)
+                    newRelativePositions[i][1] = -s.getRelativeRow(); //New column is negative old row
+                }
+                else{
+                    //Edges
+                    if(s.getRelativeRow() == s.getRelativeCol()){
+                        //Bottom Right and Top Left Square
+                        newRelativePositions[i][0] = s.getRelativeRow(); //The Row stays the Same
+                        newRelativePositions[i][1] = -s.getRelativeCol(); //Column becomes the opposite
+                    }
+                    else{
+                        //Top Right and bottom Left Square
+                        newRelativePositions[i][0] = -s.getRelativeRow(); //Row becomes the opposite
+                        newRelativePositions[i][1] = s.getRelativeCol(); //Column stays the same
+                    }
+                }
+            }
+
+        }
+        boolean valid = isRotationValid(gameBoard, newRelativePositions, newAbsolutePositions);
+        if(valid){
+            rotate(newRelativePositions, newAbsolutePositions);
         }
 
+        //Put Block in new Position on GameBoard
+        for(Square s : blockStructureSortedByRow){
+            gameBoard[s.getAbsoluteRow()][s.getAbsoluteCol()] = s;
+        }
+
+    }
+
+    private void rotate(int[][] newRelativePositions, int[][] newAbsolutePositions) {
+        for(int i = 0; i < newRelativePositions.length; i++){
+            blockStructureSortedByRow.get(i).setAbsoluteRow(newAbsolutePositions[i][0]);
+            blockStructureSortedByRow.get(i).setAbsoluteCol(newAbsolutePositions[i][1]);
+
+            blockStructureSortedByRow.get(i).setRelativeRow(newRelativePositions[i][0]);
+            blockStructureSortedByRow.get(i).setRelativeCol(newRelativePositions[i][1]);
+        }
+        blockStructureSortedByRow.sort(Square.Comparators.ROW.reversed());
+        blockStructureSortedByCol.sort(Square.Comparators.COLUMN);
+
+
+
+    }
+
+
+    private boolean isRotationValid(Square[][] gameBoard, int[][] newRelativePositions, int[][] newAbsolutePositions) {
+        for(int i = 0; i < newRelativePositions.length; i++){
+            newAbsolutePositions[i][0] = center.getAbsoluteRow() + newRelativePositions[i][0];
+            newAbsolutePositions[i][1] = center.getAbsoluteCol() + newRelativePositions[i][1];
+
+            int row = newAbsolutePositions[i][0];
+            int col = newAbsolutePositions[i][1];
+            if(row < 0 || row >= gameBoard.length - 1||col >= gameBoard[0].length-1){
+                return false;
+            }
+            if (gameBoard[row][col] != null && gameBoard[row][col].getBlockID() != blockID){
+                return false;
+            }
+        }
+        for(Square s : blockStructureSortedByRow){
+            gameBoard[s.getAbsoluteRow()][s.getAbsoluteCol()] = null;
+        }
+        return true;
     }
 
 
