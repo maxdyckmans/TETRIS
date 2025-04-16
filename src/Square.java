@@ -2,12 +2,14 @@ import java.util.Comparator;
 
 public class Square {
     private final int type;
-    private int blockID;
+    private final int blockID;
 
-    private final int relativeRow;
-    private final int relativeCol;
+    private int relativeRow;
+    private int relativeCol;
     private int absoluteRow;
     private int absoluteCol;
+
+    private boolean connectedToBottom;
 
     public Square (int blockID, int type, int relativeRow, int relativeCol){
         this.type = type;
@@ -40,8 +42,12 @@ public class Square {
         this.absoluteCol = absoluteCol;
     }
 
-    public boolean isEmpty(){
-        return type == 0;
+    public void setRelativeRow(int relativeRow) {
+        this.relativeRow = relativeRow;
+    }
+
+    public void setRelativeCol(int relativeCol) {
+        this.relativeCol = relativeCol;
     }
 
     public int getType() {
@@ -50,6 +56,14 @@ public class Square {
 
     public int getBlockID() {
         return blockID;
+    }
+
+    public boolean isConnectedToBottom() {
+        return connectedToBottom;
+    }
+
+    public void setConnectedToBottom(boolean connectedToBottom) {
+        this.connectedToBottom = connectedToBottom;
     }
 
     @Override
