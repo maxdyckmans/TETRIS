@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -10,7 +11,7 @@ public class Controller {
     public static final int ROWS = 20;
     public static final int WINDOW_WIDTH = 500;
     public static final int WINDOW_HEIGHT = 1000;
-    public static final int TIMER_DELAY = 500;
+    public static final int TIMER_DELAY = 1000;
     public static final int BLOCK_TYPES = 8;
 
 
@@ -22,15 +23,23 @@ public class Controller {
 
     public Controller(){
 
+        gameLogic = new GameLogic(ROWS,COLUMNS);
+
 
         gamePanel = new GamePanel();
-        gameLogic = new GameLogic(ROWS,COLUMNS );
-        window = new JFrame();
+        gamePanel.setPreferredSize(new Dimension(WINDOW_WIDTH + 1, WINDOW_HEIGHT + 1));
 
-        window.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        //Helper panel to center the gamePanel
+        JPanel wrapper = new JPanel(new GridBagLayout());
+        wrapper.add(gamePanel);
+
+        window = new JFrame();
+        window.setExtendedState(JFrame.MAXIMIZED_BOTH);
         window.setLocationRelativeTo(null);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.add(gamePanel);
+        window.setLayout(new BorderLayout());
+        window.add(wrapper, BorderLayout.CENTER);
         window.setVisible(true);
 
         keyListener = new KeyListener() {
@@ -50,17 +59,10 @@ public class Controller {
                 if(key == KeyEvent.VK_UP|| key == KeyEvent.VK_W){
 
                     gameLogic.rotateCurrentBlock();
-                    System.out.println("ROTATION DONE");
-
-
-
-                    // This runs on the EDT after doInBackground finishes
-                    gamePanel.revalidate();
                     gamePanel.repaint();
-                    System.out.println("REPAINT");
 
 
-                    //Rotating the Block takes to long, so it is calculated in a new Thread, so that the repaint method is called at the right moment
+
 
 
                 }
@@ -69,7 +71,6 @@ public class Controller {
                 if(key == KeyEvent.VK_RIGHT|| key == KeyEvent.VK_D) {
 
                     gameLogic.moveCurrentBlockHorizontally(1);
-
                     gamePanel.repaint();
 
                 }
@@ -94,7 +95,6 @@ public class Controller {
 
             @Override
             public void keyReleased(KeyEvent e) {
-
             }
         };
         window.addKeyListener(keyListener);
@@ -114,6 +114,7 @@ public class Controller {
         };
 
         gameLogic.initializeBoard();
+        gamePanel.gameBoard = gameLogic.gameBoard;
         gamePanel.repaint();
         gameLoop = new Timer(TIMER_DELAY, loop);
         gameLoop.start();

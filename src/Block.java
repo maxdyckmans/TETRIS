@@ -77,6 +77,8 @@ public class Block {
     }
 
     public void rotate1(Square [][] gameBoard){
+
+        //The rotation is saved in an Array so it can be checked if the rotation is valid, before executing the Rotation
         int [][] newRelativePositions = new int[blockStructureSortedByRow.size()][2];
         int [][] newAbsolutePositions = new int[blockStructureSortedByRow.size()][2];
 
@@ -119,15 +121,49 @@ public class Block {
             }
 
         }
+
+
         boolean valid = isRotationValid(gameBoard, newRelativePositions, newAbsolutePositions);
         if(valid){
             rotate(newRelativePositions, newAbsolutePositions);
+            //Update gameBoard
+            for(Square s : blockStructureSortedByRow){
+                gameBoard[s.getAbsoluteRow()][s.getAbsoluteCol()] = s;
+            }
         }
 
-        //Put Block in new Position on GameBoard
-        for(Square s : blockStructureSortedByRow){
-            gameBoard[s.getAbsoluteRow()][s.getAbsoluteCol()] = s;
+
+
+    }
+
+    public void rotate2(Square [][] gameBoard){
+        int [][] newRelativePositions = new int[blockStructureSortedByRow.size()][2];
+        int [][] newAbsolutePositions = new int[blockStructureSortedByRow.size()][2];
+
+        for(int i = 0; i < blockStructureSortedByRow.size(); i++){
+            Square s = blockStructureSortedByRow.get(i);
+            if(s.getRelativeRow() == 0){
+                newRelativePositions[i][0] = -s.getRelativeCol();
+                newRelativePositions[i][1] = 0;
+            }
+            if(s.getRelativeCol() == 0){
+                newRelativePositions[i][0] = 0;
+                newRelativePositions[i][1] = -s.getRelativeRow();
+            }
+
         }
+
+        boolean valid = isRotationValid(gameBoard, newRelativePositions, newAbsolutePositions);
+
+        if(valid){
+            rotate(newRelativePositions, newAbsolutePositions);
+
+            //Update gameBoard
+            for(Square s : blockStructureSortedByRow){
+                gameBoard[s.getAbsoluteRow()][s.getAbsoluteCol()] = s;
+            }
+        }
+
 
     }
 
@@ -149,11 +185,13 @@ public class Block {
 
     private boolean isRotationValid(Square[][] gameBoard, int[][] newRelativePositions, int[][] newAbsolutePositions) {
         for(int i = 0; i < newRelativePositions.length; i++){
+
             newAbsolutePositions[i][0] = center.getAbsoluteRow() + newRelativePositions[i][0];
             newAbsolutePositions[i][1] = center.getAbsoluteCol() + newRelativePositions[i][1];
 
             int row = newAbsolutePositions[i][0];
             int col = newAbsolutePositions[i][1];
+
             if(row < 0 || row >= gameBoard.length - 1||col >= gameBoard[0].length-1){
                 return false;
             }
@@ -161,6 +199,8 @@ public class Block {
                 return false;
             }
         }
+
+
         for(Square s : blockStructureSortedByRow){
             gameBoard[s.getAbsoluteRow()][s.getAbsoluteCol()] = null;
         }
