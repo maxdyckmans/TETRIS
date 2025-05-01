@@ -1,45 +1,122 @@
+package Tetris;
+
 import java.util.ArrayList;
 import java.util.Random;
 
 public class GameLogic {
     public static final int START_SQUARE_ROW = 1;
     public static final int START_SQUARE_COL = 5;
+    public static final int ACTIONS_BEFORE_DROP = 3;
+
+    boolean terminated;
+    double reward;
+    int steps = 0;
     Square [][] gameBoard;
     Block currentBlock;
 
-    public GameLogic(int rows,int cols ){
+    public GameLogic(int rows,int cols){
         gameBoard = new Square[rows][cols];
     }
 
-    public void initializeBoard(){
-        gameBoard = new Square[Controller.ROWS][Controller.COLUMNS];
+    public Transition reset(){
+        gameBoard = new Square[TetrisEnvironment.ROWS][TetrisEnvironment.COLUMNS];
         addBlock();
+        reward = 0;
+        terminated = false;
+        return new Transition(getNewState(), reward, false);
+    }
 
+    public Transition step(){
+        if(!terminated){
+            double tempReward = reward;
+            reward = 0;
+
+            if(isCurrentBlockVerticallyColliding()){
+                tempReward += clearLines();
+
+                if(!addBlock()){ //The addBlock method returns false, if the Tetris.Block couldn't be added --> Game over --> return null
+                    terminated = true;
+
+                    return new Transition(getNewState(), -100.0 , true);
+                }
+            }
+
+            else {
+                if(steps % ACTIONS_BEFORE_DROP == 0){
+                    moveCurrentBlockVertically();
+                    //reward += 10; //Surviving a step give 10 Reward
+                }
+
+            }
+
+            boolean highestRowFound = false;
+            int highestRow = 20;
+
+
+            for(int I = 0; I < gameBoard.length; I++){
+                Square [] row = gameBoard[I];
+                if(!highestRowFound){
+                    for(int i = 0; i < row.length; i++){
+                        if(row[i] != null && row[i].getBlockID() != currentBlock.blockID){
+                            highestRowFound = true;
+                            highestRow -= I;
+                            break;
+                        }
+
+
+
+                    }
+
+                }
+                else{
+                    break;
+                }
+
+
+            }
+//            System.out.println("Highest Row: " + highestRow);
+            reward += (double) highestRow;
+            return new Transition(getNewState(), tempReward, false);
+        }
+        return new Transition(getNewState(), -100.0 , true);
     }
 
 
-    public Square[][] getUpdate(){
+    public int [] getNewState(){
+        if(!terminated){
+            int [] newState = new int [gameBoard.length * gameBoard[0].length + 8 ];
 
-        if(isCurrentBlockVerticallyColliding()){
-            clearLines();
-            if(!addBlock()){ //The addBlock method returns false, if the Block couldn't be added --> Game over --> return null
-
-                return null;
-
+            for(int i = 0; i < currentBlock.blockStructureSortedByRow.size(); i++){
+                newState[ i*2] = currentBlock.blockStructureSortedByRow.get(i).getAbsoluteRow();
+                newState[ i*2 +1] = currentBlock.blockStructureSortedByRow.get(i).getAbsoluteCol();
             }
+
+            for(int i = 0; i < gameBoard.length;i++){
+                for(int j = 0; j < gameBoard[0].length; j++){
+                    if(gameBoard[i][j] == null){
+                        newState[i+ 8 + j] = 0;
+                    }
+                    else{
+                        newState[i + 8 + j] = 1;
+
+//                        if(gameBoard[i][j].getBlockID() == currentBlock.blockID){
+//                            newState[i + j] = 2;
+//                        }
+//                        else{
+//                            newState[i + j] = 1;
+//                        }
+                    }
+                }
+            }
+
+            return newState;
         }
-        else {
-            moveCurrentBlockVertically();
-        }
-
-
-
-        return gameBoard;
+        return new int[gameBoard.length * gameBoard[0].length + 8];
     }
 
     public boolean addBlock(){
         Random random = new Random();
-        int nextBlock = random.nextInt(Controller.BLOCK_TYPES - 1) + 1;
+        int nextBlock = random.nextInt(TetrisEnvironment.BLOCK_TYPES - 1) + 1;
 
 
         currentBlock = new Block(nextBlock);
@@ -49,16 +126,15 @@ public class GameLogic {
         for(Square s : currentBlock.blockStructureSortedByRow){
             int absoluteRow = START_SQUARE_ROW + s.getRelativeRow();
             int absoluteCol = START_SQUARE_COL + s.getRelativeCol();
-            if(gameBoard[absoluteRow][absoluteCol] == null){
-                valid = true;
-            }
-            else {
+            if (gameBoard[absoluteRow][absoluteCol] != null) {
                 valid = false;
+                currentBlock = null;
+                break;
             }
         }
 
 
-        //Adds Block if possible
+        //Adds Tetris.Block if possible
         if(valid){
             for(Square s : currentBlock.blockStructureSortedByRow){
                 int absoluteRow = START_SQUARE_ROW + s.getRelativeRow();
@@ -83,7 +159,7 @@ public class GameLogic {
                     return true;
                 } else {
                     Square nextSquare = gameBoard[s.getAbsoluteRow() ][s.getAbsoluteCol()+ direction];
-                    if (nextSquare != null && nextSquare.getBlockID() != s.getBlockID()) { //Check if Block collides with Anything one Square down (Which isnt part of the Block)
+                    if (nextSquare != null && nextSquare.getBlockID() != s.getBlockID()) { //Check if Tetris.Block collides with Anything one Tetris.Square down (Which isnt part of the Tetris.Block)
                         return true;
                     }
                 }
@@ -94,7 +170,7 @@ public class GameLogic {
                     return true;
                 } else {
                     Square nextSquare = gameBoard[s.getAbsoluteRow() ][s.getAbsoluteCol()+ direction];
-                    if (nextSquare != null && nextSquare.getBlockID() != s.getBlockID()) { //Check if Block collides with Anything one Square down (Which isnt part of the Block)
+                    if (nextSquare != null && nextSquare.getBlockID() != s.getBlockID()) { //Check if Tetris.Block collides with Anything one Tetris.Square down (Which isnt part of the Tetris.Block)
                         return true;
                     }
                 }
@@ -116,11 +192,11 @@ public class GameLogic {
                 for(Square s: currentBlock.blockStructureSortedByCol){
 
 
-                    //Move the Square to the right
+                    //Move the Tetris.Square to the right
                     s.setAbsoluteCol(s.getAbsoluteCol() + direction);
                     gameBoard[s.getAbsoluteRow()][s.getAbsoluteCol()] = s;
 
-                    //Leave an empty Square behind
+                    //Leave an empty Tetris.Square behind
                     gameBoard[s.getAbsoluteRow()][s.getAbsoluteCol() - direction] = null;
 
                 }
@@ -130,11 +206,11 @@ public class GameLogic {
             if(direction == 1){
                 for(Square s: currentBlock.blockStructureSortedByCol.reversed()){
 
-                    //Move the Square to the right
+                    //Move the Tetris.Square to the right
                     s.setAbsoluteCol(s.getAbsoluteCol() + direction);
                     gameBoard[s.getAbsoluteRow()][s.getAbsoluteCol()] = s;
 
-                    //Leave an empty Square behind
+                    //Leave an empty Tetris.Square behind
                     gameBoard[s.getAbsoluteRow()][s.getAbsoluteCol() - direction] = null;
 
                 }
@@ -147,12 +223,12 @@ public class GameLogic {
     public boolean isCurrentBlockVerticallyColliding(){
         for(Square s : currentBlock.blockStructureSortedByRow){
 
-            if(s.getAbsoluteRow() == gameBoard.length - 1){ //Check if Block has reached bottom
+            if(s.getAbsoluteRow() == gameBoard.length - 1){ //Check if Tetris.Block has reached bottom
                 return true;
             } else {
                 Square nextSquare = gameBoard[s.getAbsoluteRow()+1][s.getAbsoluteCol()];
 
-                if(nextSquare != null && nextSquare.getBlockID()!= s.getBlockID()) { //Check if Block collides with Anything one Square down (Which isnt part of the Block)
+                if(nextSquare != null && nextSquare.getBlockID()!= s.getBlockID()) { //Check if Tetris.Block collides with Anything one Tetris.Square down (Which isnt part of the Tetris.Block)
                     return true;
                 }
             }
@@ -164,7 +240,7 @@ public class GameLogic {
         for(Square s: currentBlock.blockStructureSortedByRow){
             s.setAbsoluteRow(s.getAbsoluteRow()+1);
 
-            //Move the Square one down and leave an empty square behind
+            //Move the Tetris.Square one down and leave an empty square behind
             gameBoard[s.getAbsoluteRow()][s.getAbsoluteCol()] = s;
             gameBoard[s.getAbsoluteRow()-1][s.getAbsoluteCol()] = null;
 
@@ -172,30 +248,36 @@ public class GameLogic {
     }
 
     public void drop(){
-        if(!isCurrentBlockVerticallyColliding()) {
-            moveCurrentBlockVertically();
+        if(!terminated){
+            if(!isCurrentBlockVerticallyColliding()) {
+                moveCurrentBlockVertically();
+            }
+            else{
+                reward += clearLines();
+            }
         }
-        else{
-            clearLines();
-        }
-
     }
     public void hardDrop(){
-        while(!isCurrentBlockVerticallyColliding()){
-            moveCurrentBlockVertically();
-        }
-        clearLines();
+        if(!terminated){
+            while(!isCurrentBlockVerticallyColliding()){
+                moveCurrentBlockVertically();
+            }
+            reward += clearLines();
 
+        }
     }
 
 
     public void rotateCurrentBlock(){
-        if(currentBlock.type < 6) {
-            currentBlock.rotate1(gameBoard);
+        if(!terminated){
+            if(currentBlock.type < 6) {
+                currentBlock.rotate1(gameBoard);
+            }
+            else if(currentBlock.type == 7){
+                currentBlock.rotate2(gameBoard);
+            }
         }
-        else if(currentBlock.type == 7){
-            currentBlock.rotate2(gameBoard);
-        }
+
     }
 
 
@@ -223,7 +305,7 @@ public class GameLogic {
 
         return fullRows;
     }
-    public void clearLines(){
+    public double clearLines(){
         ArrayList<Integer> fullRows = identifyFullRows();
 
         //Clear fullRows and move none fullRows the amount of fullRows below
@@ -243,18 +325,26 @@ public class GameLogic {
                 for (int j = 0; j < gameBoard[0].length; j++){
                     if(gameBoard[i][j] != null){
                         gameBoard[i][j].setAbsoluteRow(gameBoard[i][j].getAbsoluteRow() + countFullRowsBelow);
-                        //System.out.print("");
+
                     }
 
                 }
             }
 
         }
+
+
+        double rewardGain = fullRows.size() * fullRows.size() * 100000; // rewardsGained are greater the more lines are cleared at the same time
         if(!fullRows.isEmpty()) {
+            System.out.println(fullRows.size());
+
+            System.out.println("YASSS PLS LEARN FROM THIS EXTREMELY POSITIVE EXPERIENCE");
+
             updateGameBoard();
             gravity();
             fullRows = null;
         }
+        return rewardGain;
     }
 
 
@@ -270,7 +360,7 @@ public class GameLogic {
         }
 
 
-        for(Square s : gameBoard[Controller.ROWS-1]){
+        for(Square s : gameBoard[TetrisEnvironment.ROWS-1]){
             if(s != null){
                 //All Squares on the Ground (Last Row) are connected to bottom
                 s.setConnectedToBottom(true);
@@ -313,7 +403,7 @@ public class GameLogic {
 
                 if (currentRight != null) {
                     if (currentRight.isConnectedToBottom()) {
-                        //If one of the Squares is connected to bottom, so are its neighbours (Top Square does not need to be set true again)
+                        //If one of the Squares is connected to bottom, so are its neighbours (Top Tetris.Square does not need to be set true again)
                         if (j - 1 >= 0) {
                             if (gameBoard[i][j - 1] != null) {
                                 gameBoard[i][j - 1].setConnectedToBottom(true);
@@ -329,8 +419,8 @@ public class GameLogic {
         //Letze Reihe wird manuell belegt, da darüber keine Reihe sit, daher bringt die obere schleife eine Out of Bounds exception
 //        for(int i = 0; i < gameBoard[0].length; i++){
 //
-//            Square currentLeft = gameBoard[0][i];
-//            Square currentRight = gameBoard[0][gameBoard[0].length - 1 - i];
+//            Tetris.Square currentLeft = gameBoard[0][i];
+//            Tetris.Square currentRight = gameBoard[0][gameBoard[0].length - 1 - i];
 //
 //            if(currentLeft.isConnectedToBottom()){
 //
@@ -338,13 +428,13 @@ public class GameLogic {
 //
 //        }
 
-        for (Square[] array : gameBoard) {
-            for (Square s : array) {
-                if (s == null) System.out.print(0);
-                else System.out.print(s.isConnectedToBottom());
-            }
-            System.out.println();
-        }
+//        for (Square[] array : gameBoard) {
+//            for (Square s : array) {
+//                if (s == null) System.out.print(0);
+//                else System.out.print(s.isConnectedToBottom());
+//            }
+//            System.out.println();
+//        }
 
     }
     public boolean allConnectedToBottom () {
@@ -352,14 +442,14 @@ public class GameLogic {
             for (Square s : array) {
                 if (s != null) {
                     if (!s.isConnectedToBottom()) {
-                        System.out.println("NOT ALL CONNECTED TO BOTTOM");
+                        //System.out.println("NOT ALL CONNECTED TO BOTTOM");
                         return false;
                     }
                 }
 
             }
         }
-        System.out.println("ALL CONNECTED TO BOTTOM");
+        //System.out.println("ALL CONNECTED TO BOTTOM");
         return true;
     }
     public void gravity(){

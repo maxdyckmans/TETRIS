@@ -1,3 +1,5 @@
+package Tetris;
+
 import java.util.Comparator;
 
 public class Square {
@@ -58,6 +60,7 @@ public class Square {
         return blockID;
     }
 
+
     public boolean isConnectedToBottom() {
         return connectedToBottom;
     }
@@ -70,8 +73,6 @@ public class Square {
     public String toString() {
         return Integer.toString(type);
     }
-
-
 
 
 

@@ -1,3 +1,5 @@
+package Tetris;
+
 import java.util.ArrayList;
 
 
@@ -10,12 +12,14 @@ public class Block {
     public Square center;
     //Constructor
     public Block(int type){
+
         this.type = type;
         blockID = blockCount;
         blockCount++;
 
         center = new Square(blockID, type, 0, 0);
         blockStructureSortedByRow.add(center);
+
         switch(type){
             case 1:
 
@@ -40,10 +44,10 @@ public class Block {
                 break;
 
             case 4:
+
                 blockStructureSortedByRow.add(new Square(blockID,type, -1, -1));
                 blockStructureSortedByRow.add(new Square(blockID,type, 0, -1));
                 blockStructureSortedByRow.add(new Square(blockID,type, 1, 0));
-
                 break;
 
             case 5:
@@ -67,6 +71,8 @@ public class Block {
 
                 break;
         }
+
+
         //Creates Arraylist with Squares sorted in reverse by their ROW, for moving down
         blockStructureSortedByRow.sort(Square.Comparators.ROW.reversed());
 
@@ -101,19 +107,19 @@ public class Block {
             }
             else{
                 if (s.getRelativeCol() == 0){
-                    //Top and Bottom Square
+                    //Top and Bottom Tetris.Square
                     newRelativePositions[i][0] = 0; //new Row is old Column (0)
                     newRelativePositions[i][1] = -s.getRelativeRow(); //New column is negative old row
                 }
                 else{
                     //Edges
                     if(s.getRelativeRow() == s.getRelativeCol()){
-                        //Bottom Right and Top Left Square
+                        //Bottom Right and Top Left Tetris.Square
                         newRelativePositions[i][0] = s.getRelativeRow(); //The Row stays the Same
                         newRelativePositions[i][1] = -s.getRelativeCol(); //Column becomes the opposite
                     }
                     else{
-                        //Top Right and bottom Left Square
+                        //Top Right and bottom Left Tetris.Square
                         newRelativePositions[i][0] = -s.getRelativeRow(); //Row becomes the opposite
                         newRelativePositions[i][1] = s.getRelativeCol(); //Column stays the same
                     }
@@ -192,10 +198,10 @@ public class Block {
             int row = newAbsolutePositions[i][0];
             int col = newAbsolutePositions[i][1];
 
-            if(row < 0 || row >= gameBoard.length - 1||col >= gameBoard[0].length-1){
+            if(row < 0 || row >= gameBoard.length - 1||col >= gameBoard[0].length-1|| col < 0){
                 return false;
             }
-            if (gameBoard[row][col] != null && gameBoard[row][col].getBlockID() != blockID){
+            else if (gameBoard[row][col] != null && gameBoard[row][col].getBlockID() != blockID){
                 return false;
             }
         }

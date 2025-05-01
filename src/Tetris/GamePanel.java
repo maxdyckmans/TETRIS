@@ -1,14 +1,14 @@
+package Tetris;
+
 import javax.swing.*;
 import java.awt.*;
-
-import static java.awt.Transparency.TRANSLUCENT;
 
 public class GamePanel extends JPanel {
 
 
-public static final int ROW_HEIGHT = Controller.WINDOW_HEIGHT/Controller.ROWS;
-public static final int COLUMN_WIDTH = Controller.WINDOW_WIDTH/Controller.COLUMNS;
-public Square[][] gameBoard = new Square[Controller.ROWS][Controller.COLUMNS];
+public static final int ROW_HEIGHT = TetrisEnvironment.WINDOW_HEIGHT/ TetrisEnvironment.ROWS;
+public static final int COLUMN_WIDTH = TetrisEnvironment.WINDOW_WIDTH/ TetrisEnvironment.COLUMNS;
+public Square[][] gameBoard = new Square[TetrisEnvironment.ROWS][TetrisEnvironment.COLUMNS];
 private final Color[] blockColors = {Color.WHITE, Color.BLUE, Color.ORANGE, Color.RED, Color.GREEN, Color.MAGENTA, Color.YELLOW, Color.CYAN };
 
     public GamePanel(){
@@ -22,7 +22,7 @@ private final Color[] blockColors = {Color.WHITE, Color.BLUE, Color.ORANGE, Colo
     public void paintComponent(Graphics g){
         super.paintComponent(g);
 
-        //Draw the Block falling
+        //Draw the Tetris.Block falling
         for(Square[] array: gameBoard){
             for(Square s: array){
                 if(s != null){
@@ -55,7 +55,7 @@ private final Color[] blockColors = {Color.WHITE, Color.BLUE, Color.ORANGE, Colo
             }
 
 
-            g2.drawLine(0,i * ROW_HEIGHT , Controller.COLUMNS * COLUMN_WIDTH,i * ROW_HEIGHT  );
+            g2.drawLine(0,i * ROW_HEIGHT , TetrisEnvironment.COLUMNS * COLUMN_WIDTH,i * ROW_HEIGHT  );
         }
 
         //Drawing from Top to Bottom
@@ -72,7 +72,7 @@ private final Color[] blockColors = {Color.WHITE, Color.BLUE, Color.ORANGE, Colo
                 g.setColor(Color.GRAY);
                 g2.setStroke(new BasicStroke(1));
             }
-            g2.drawLine(i * COLUMN_WIDTH, 0, i * COLUMN_WIDTH, Controller.ROWS * ROW_HEIGHT );
+            g2.drawLine(i * COLUMN_WIDTH, 0, i * COLUMN_WIDTH, TetrisEnvironment.ROWS * ROW_HEIGHT );
         }
 
 
